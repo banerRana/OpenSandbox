@@ -312,21 +312,26 @@ internal class FilesystemAdapter(
     override fun replaceContents(entries: List<ContentReplaceEntry>): List<ContentReplaceResult> {
         return try {
             val replaceMap = entries.toApiReplaceFileContentMap()
-            val jsonBody = buildJsonObject {
-                replaceMap.forEach { (path, item) ->
-                    put(path, buildJsonObject {
-                        put("old", item.old)
-                        put("new", item.new)
-                    })
-                }
-            }.toString()
+            val jsonBody =
+                buildJsonObject {
+                    replaceMap.forEach { (path, item) ->
+                        put(
+                            path,
+                            buildJsonObject {
+                                put("old", item.old)
+                                put("new", item.new)
+                            },
+                        )
+                    }
+                }.toString()
 
             val baseUrl = "${httpClientProvider.config.protocol}://${execdEndpoint.endpoint}"
-            val request = Request.Builder()
-                .url("$baseUrl/files/replace")
-                .post(jsonBody.toRequestBody("application/json".toMediaType()))
-                .apply { execdEndpoint.headers.forEach { (k, v) -> header(k, v) } }
-                .build()
+            val request =
+                Request.Builder()
+                    .url("$baseUrl/files/replace")
+                    .post(jsonBody.toRequestBody("application/json".toMediaType()))
+                    .apply { execdEndpoint.headers.forEach { (k, v) -> header(k, v) } }
+                    .build()
 
             httpClientProvider.httpClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {

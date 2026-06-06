@@ -1369,7 +1369,7 @@ public class SandboxE2ETest extends BaseE2ETest {
         assertEquals(0, noMatchResults.get(0).getReplacedCount());
 
         // Multiple matches
-        sandbox.files().writeFiles(List.of(
+        sandbox.files().write(List.of(
                 WriteEntry.builder().path(testDir1 + "/multi.txt").data("foo bar foo baz foo").build()));
         var multiResults = sandbox.files().replaceContents(List.of(
                 ContentReplaceEntry.builder()
