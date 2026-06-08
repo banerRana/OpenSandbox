@@ -328,7 +328,7 @@ internal class FilesystemAdapter(
             val baseUrl = "${httpClientProvider.config.protocol}://${execdEndpoint.endpoint}"
             val request =
                 Request.Builder()
-                    .url("$baseUrl/files/replace")
+                    .url("$baseUrl/files/replace?verbose=true")
                     .post(jsonBody.toRequestBody("application/json".toMediaType()))
                     .apply { execdEndpoint.headers.forEach { (k, v) -> header(k, v) } }
                     .build()

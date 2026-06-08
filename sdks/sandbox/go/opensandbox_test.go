@@ -1570,6 +1570,9 @@ func TestReplaceInFiles(t *testing.T) {
 		if r.URL.Path != "/files/replace" {
 			assert.Fail(t, fmt.Sprintf("expected /files/replace, got %s", r.URL.Path))
 		}
+		if r.URL.Query().Get("verbose") != "true" {
+			assert.Fail(t, "expected verbose=true query param")
+		}
 
 		var req ReplaceRequest
 		json.NewDecoder(r.Body).Decode(&req)

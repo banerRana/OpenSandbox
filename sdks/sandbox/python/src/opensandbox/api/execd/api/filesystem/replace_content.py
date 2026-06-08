@@ -36,6 +36,7 @@ def _get_kwargs(
     _kwargs: dict[str, Any] = {
         "method": "post",
         "url": "/files/replace",
+        "params": {"verbose": "true"},
     }
 
     _kwargs["json"] = body.to_dict()

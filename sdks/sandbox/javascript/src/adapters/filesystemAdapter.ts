@@ -350,6 +350,7 @@ export class FilesystemAdapter implements SandboxFiles {
     const body =
       req as unknown as typeof FilesystemAdapter.Api.ReplaceContentsRequest;
     const { data, error, response } = await this.client.POST("/files/replace", {
+      params: { query: { verbose: true } },
       body,
     });
     throwOnOpenApiFetchError({ error, response }, "Replace contents failed");

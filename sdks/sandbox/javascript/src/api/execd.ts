@@ -415,6 +415,9 @@ export interface paths {
          * @description Performs text replacement in one or multiple files. Replaces all occurrences
          *     of the old string with the new string (similar to strings.ReplaceAll).
          *     Preserves file permissions. Useful for batch text substitution across files.
+         *
+         *     When `verbose=true` is set, the response includes per-file replacement counts.
+         *     Without this parameter, the response body is empty (backward-compatible behavior).
          */
         post: operations["replaceContent"];
         delete?: never;
@@ -1556,7 +1559,10 @@ export interface operations {
     };
     replaceContent: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description When true, return per-file replacement counts in the response body. */
+                verbose?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1581,7 +1587,10 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Content replaced successfully */
+            /**
+             * @description Content replaced successfully. When `verbose=true`, returns per-file
+             *     replacement counts. Otherwise, the response body is empty.
+             */
             200: {
                 headers: {
                     [name: string]: unknown;

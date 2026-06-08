@@ -17,7 +17,6 @@ package opensandbox
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -259,11 +258,8 @@ func (e *ExecdClient) SearchFiles(ctx context.Context, dir string, pattern strin
 // ReplaceInFiles performs text replacement in the specified files.
 func (e *ExecdClient) ReplaceInFiles(ctx context.Context, req ReplaceRequest) (ReplaceResponse, error) {
 	var resp ReplaceResponse
-	err := e.client.doRequest(ctx, http.MethodPost, "/files/replace", req, &resp)
+	err := e.client.doRequest(ctx, http.MethodPost, "/files/replace?verbose=true", req, &resp)
 	if err != nil {
-		if errors.Is(err, io.EOF) {
-			return ReplaceResponse{}, nil
-		}
 		return nil, err
 	}
 	return resp, nil

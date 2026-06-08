@@ -745,9 +745,20 @@ paths:
         Performs text replacement in one or multiple files. Replaces all occurrences
         of the old string with the new string (similar to strings.ReplaceAll).
         Preserves file permissions. Useful for batch text substitution across files.
+
+        When `verbose=true` is set, the response includes per-file replacement counts.
+        Without this parameter, the response body is empty (backward-compatible behavior).
       operationId: replaceContent
       tags:
         - Filesystem
+      parameters:
+        - name: verbose
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: When true, return per-file replacement counts in the response body.
       requestBody:
         required: true
         content:
@@ -765,7 +776,9 @@ paths:
                 new: "DEBUG = False"
       responses:
         "200":
-          description: Content replaced successfully
+          description: |
+            Content replaced successfully. When `verbose=true`, returns per-file
+            replacement counts. Otherwise, the response body is empty.
           content:
             application/json:
               schema:
