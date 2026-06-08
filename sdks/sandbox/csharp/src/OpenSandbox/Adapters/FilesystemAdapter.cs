@@ -106,9 +106,12 @@ internal sealed class FilesystemAdapter : ISandboxFiles
     {
         var queryParams = new Dictionary<string, string?>
         {
-            ["path"] = path,
-            ["depth"] = depth?.ToString()
+            ["path"] = path
         };
+        if (depth.HasValue)
+        {
+            queryParams["depth"] = depth.Value.ToString();
+        }
 
         var response = await _client.GetAsync<JsonElement>("/directories/list", queryParams, cancellationToken).ConfigureAwait(false);
         return ParseSearchFilesResponse(response);

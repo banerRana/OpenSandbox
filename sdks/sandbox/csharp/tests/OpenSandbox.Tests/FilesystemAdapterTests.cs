@@ -55,6 +55,22 @@ public class FilesystemAdapterTests
         entries[0].Type.Should().Be("symlink");
     }
 
+    [Fact]
+    public async Task ListDirectoryAsync_ShouldOmitDepthWhenNull()
+    {
+        var handler = new CaptureJsonHandler("[]");
+        using var client = new HttpClient(handler);
+        var wrapper = new HttpClientWrapper(client, "http://localhost:8080");
+        var adapter = new FilesystemAdapter(wrapper, client, "http://localhost:8080", new Dictionary<string, string>());
+
+        var entries = await adapter.ListDirectoryAsync("/workspace");
+
+        handler.LastRequestUri.Should().NotBeNull();
+        handler.LastRequestUri!.Query.Should().Contain("path=%2Fworkspace");
+        handler.LastRequestUri!.Query.Should().NotContain("depth=");
+        entries.Should().BeEmpty();
+    }
+
     private sealed class CaptureJsonHandler(string payload) : HttpMessageHandler
     {
         public Uri? LastRequestUri { get; private set; }
