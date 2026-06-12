@@ -20,6 +20,7 @@ package controller
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -40,7 +41,7 @@ func DeleteFile(filePath string) error {
 
 	fileInfo, err := os.Stat(absPath)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, fs.ErrNotExist) {
 			return nil
 		}
 		return err
@@ -129,7 +130,7 @@ func RenameFile(item model.RenameFileItem) error {
 	}
 
 	if _, err := os.Stat(srcPath); os.IsNotExist(err) {
-		return fmt.Errorf("source path not found: %s", item.Src)
+		return fmt.Errorf("source path not found: %s: %w", item.Src, err)
 	}
 
 	dstDir := filepath.Dir(dstPath)
@@ -162,20 +163,21 @@ func MakeDir(dir string, perm model.Permission) error {
 	return ChmodFile(abs, perm)
 }
 
-func GetFileInfo(filePath string) (model.FileInfo, error) {
-	absPath, err := pathutil.ExpandAbsPath(filePath)
-	if err != nil {
-		return model.FileInfo{}, fmt.Errorf("invalid path %s: %w", filePath, err)
+func fileType(fileInfo os.FileInfo) string {
+	mode := fileInfo.Mode()
+	if mode&os.ModeSymlink != 0 {
+		return "symlink"
 	}
-
-	fileInfo, err := os.Stat(absPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return model.FileInfo{}, fmt.Errorf("file not found: %s", filePath)
-		}
-		return model.FileInfo{}, fmt.Errorf("error accessing file %s: %w", filePath, err)
+	if fileInfo.IsDir() {
+		return "directory"
 	}
+	if mode.IsRegular() {
+		return "file"
+	}
+	return "other"
+}
 
+func buildFileInfo(absPath string, fileInfo os.FileInfo) (model.FileInfo, error) {
 	stat := fileInfo.Sys().(*syscall.Stat_t)
 
 	owner := strconv.FormatUint(uint64(stat.Uid), 10)
@@ -192,6 +194,7 @@ func GetFileInfo(filePath string) (model.FileInfo, error) {
 
 	return model.FileInfo{
 		Path:       absPath,
+		Type:       fileType(fileInfo),
 		Size:       fileInfo.Size(),
 		ModifiedAt: fileInfo.ModTime(),
 		CreatedAt:  getFileCreateTime(fileInfo),
@@ -201,6 +204,23 @@ func GetFileInfo(filePath string) (model.FileInfo, error) {
 			Mode:  func() int { i, _ := strconv.Atoi(mode); return i }(),
 		},
 	}, nil
+}
+
+func GetFileInfo(filePath string) (model.FileInfo, error) {
+	absPath, err := pathutil.ExpandAbsPath(filePath)
+	if err != nil {
+		return model.FileInfo{}, fmt.Errorf("invalid path %s: %w", filePath, err)
+	}
+
+	fileInfo, err := os.Lstat(absPath)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return model.FileInfo{}, fmt.Errorf("file not found: %s: %w", filePath, err)
+		}
+		return model.FileInfo{}, fmt.Errorf("error accessing file %s: %w", filePath, err)
+	}
+
+	return buildFileInfo(absPath, fileInfo)
 }
 
 func SearchFileMetadata(metadata map[string]model.FileMetadata, filePath string) (string, model.FileMetadata, bool) {
